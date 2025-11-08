@@ -6,7 +6,7 @@ export default function TestFeed() {
 
   // use the hook
   usePoliceFeed((msg) => {
-    console.log("📩 Received:", msg);
+    console.log(" Received:", msg);
     setMessages((prev) => [...prev, msg]);
   });
 
