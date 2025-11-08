@@ -1,0 +1,10 @@
+dependencies:
+-cd to .../mars
+-npm install libraryName
+
+libraries:
+react-router-dom
+
+instructions for running:
+-cd to .../mars
+-npm start

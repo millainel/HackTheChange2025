@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const Homepage = () => {
+const Base = () => {
   // hallo
 
   return (
@@ -10,4 +10,4 @@ const Homepage = () => {
   );
 };
 
-export default Homepage;
+export default Base;
