@@ -5,7 +5,7 @@ const Base = () => {
 
   return (
     <div>
-      
+      <h1>base</h1>
     </div>
   );
 };
