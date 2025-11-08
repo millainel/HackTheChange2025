@@ -1,9 +1,9 @@
 # Team - going to MARS
-## XEB6
+## Team Code - XEB6
 Our project :D
 
 ## Members:
-Akila Fernando
-Rajvir Bhatti
-Millaine Li
-Sabrina Li
+Akila Fernando</br>
+Rajvir Bhatti</br>
+Millaine Li</br>
+Sabrina Li</br>
