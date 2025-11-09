@@ -14,11 +14,12 @@ CREATE TABLE person (
   phone          TEXT,
   username       TEXT        UNIQUE NOT NULL,
   password       TEXT        NOT NULL,
-  emergency_contact_name TEXT,
-  emergency_contact_phone TEXT,
-  blood_type     TEXT NOT NULL,
-  medical_note      TEXT,
+  emergency_contact_name    TEXT,
+  emergency_contact_phone   TEXT,
+  blood_type     TEXT        NOT NULL,
+  medical_note   TEXT,
   allergy_notes  TEXT,
+  device_id      TEXT        UNIQUE NOT NULL,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
