@@ -21,12 +21,38 @@ const POViewPage = () => {
     // const [center, setCenter] = useState(); // NOTE: remove default value of schulich, center for message for marker coords
     // const [messages, setMessages] = useState([]);
     const [message, setMessage] = useState({ dID: "mars123" }); // NOTE: hard coded initial value of dID
+    const [dData, setDData] = useState();
     
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     })
     
     console.log("isLoaded:", isLoaded);
+
+    useEffect(() => {
+        if (!message?.dID) return;
+
+        const fetchData = async () => {
+            try {
+            // const response = await fetch(`/api/data/${message.dID}`);
+            const backendEndpoint = 'http://localhost:5001/POViewPage';
+            const response = await fetch(backendEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ device_id: message.dID }),
+            });
+            const data = await response.json();
+            console.log("Fetched data:", data);
+            setDData(data);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+
+        fetchData();
+    }, [message]);
     
     // once map is loaded, start listening to ESP feed
     usePoliceFeed((msg) => {
