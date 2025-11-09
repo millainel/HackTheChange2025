@@ -8,6 +8,7 @@ const CustomerFillable = () => {
         fname: '',
         lname: '',
         gender: '',
+        birth_date: '',
         email: '',
         address: '',
         phone: '',
@@ -26,7 +27,7 @@ const CustomerFillable = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (formData.fname && formData.lname && formData.email && formData.address && formData.phone && formData.gender && formData.emergencyContactName && formData.emergencyContactNumber) {
+        if (formData.fname && formData.lname && formData.email && formData.address && formData.phone && formData.gender && formData.emergencyContactName && formData.emergencyContactNumber && formData.birth_date) {
             navigate('/CustomerFillable');
         } else {
             setError('Please fill in all fields');
@@ -77,6 +78,16 @@ const CustomerFillable = () => {
                             <option value="other">Other</option>
                             <option value="Rather Not Say">Rather Not Say</option>
                         </select>
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="date"
+                            name="birth_date"
+                            placeholder="Birth Date"
+                            value={formData.birth_date}
+                            onChange={handleChange}
+                            className="input-field"
+                        />
                     </div>
                     <div className="form-group">
                         <input
