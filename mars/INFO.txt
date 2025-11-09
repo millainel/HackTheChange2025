@@ -6,9 +6,8 @@ https://nodejs.org/en/download
 
 dependencies:
 -cd to .../mars
--npm install libraryName
 -npm install react-router-dom
--npm install mqtt --save
+-npm install mqtt
 -npm install @react-google-maps/api
 
 API:
