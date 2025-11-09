@@ -71,7 +71,7 @@ def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format '
             address,
             phone,
             username,
-            password,
+            hash_password(password),
             emergency_contact_name,
             emergency_contact_phone,
             blood_type,
@@ -192,3 +192,78 @@ def login():
 
     if not username or not password:
         return {"success": False, "message": "Missing username or password."}, 400
+
+    stored_hash = get_person_pw_by_username(username)
+    if not stored_hash:
+        return {"success": False, "message": "User not found."}, 404
+
+    if check_password(password, stored_hash):
+        person_id = get_person_id_by_username(username)
+        person = get_person_by_id(person_id)
+        return {"success": True, "message": "Logged in successfully!"}, 200 # tbh could change this to returning person?
+    else:
+        return {"success": False, "message": "Incorrect password."}, 401
+ 
+@app.route('/POLogin',methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return {"success": False, "message": "Missing username or password."}, 400
+
+    stored_hash = get_employee_pw_by_usr(username)
+    if not stored_hash:
+        return {"success": False, "message": "User not found."}, 404
+
+    if check_password(password, stored_hash):
+
+        return {"success": True, "message": "Logged in!!"}, 200
+    else:
+        return {"success": False, "message": "Incorrect password!"}, 401
+     
+
+@app.route('/CustomerFillable', methods=['POST'])
+def signup():
+    data = request.get_json()
+
+    fname = data.get("fname")
+    lname = data.get("lname")
+    gender = data.get("gender")
+    birth_date = data.get("birth_date")
+    email = data.get("email")
+    address = data.get("address")
+    phone = data.get("phone")
+    username = data.get("username")
+    password = data.get("password")
+    emergency_contact_name = data.get("emergency_contact_name")
+    emergency_contact_phone = data.get("emergency_contact_phone")
+    blood_type = data.get("blood_type")
+    medical_note = data.get("medical_note")
+    allergy_note = data.get("allergy_note")
+
+    # make sure they filled stuff out
+    required_fields = [fname, lname, gender, address, username, password, blood_type]
+    if any(field is None for field in required_fields):
+        return {"success": False, "message": "Missing required fields."}, 400
+
+
+    hashed_pw = hash_password(password)
+
+
+    try:
+        new_person_id = add_person(
+            fname, lname, gender, birth_date, email, address, phone,
+            username, hashed_pw, emergency_contact_name, emergency_contact_phone,
+            blood_type, medical_note, allergy_note
+        )
+
+        if new_person_id == -1:
+            return {"success": False, "message": "Failed to create account LOL sucks to suck fr."}, 500
+
+        #otherwise good
+        return {"success": True, "message": "Signed up!"}, 201 # culd return person id instead or smth?
+
+    except Exception as e:
+        return {"success": False, "message": str(e)}, 500
