@@ -21,7 +21,69 @@ def get_db_connection():
         user=DB_USER,
         password=DB_PASS
     )
-    return conn
+    return conn.cursor()
+
+def add_person(name: str, email: str, address: str, phone: str) -> int:
+    cursor = get_db_connection()
+    insert_query = """
+        INSERT INTO persons (name, email, address, phone)
+        VALUES (%s, %s, %s, %s), RETURNING person_id;
+    """
+    cursor.execute(insert_query, (name, email, address, phone))
+    fetched_row = cursor.fetchone()
+    if not fetched_row:
+        return -1
+    
+    # else get the first element of the fetched row
+    new_id = int(fetched_row[0])
+    cursor.close()
+    return new_id
+
+
+
+
+def add_medical_record(person_id: int, blood_type:str, medical_history: str) -> bool:
+    cursor = get_db_connection()
+    insert_query = """
+        INSERT INTO medical_records (person_id, blood_type, medical_history)
+        VALUES (%s, %s, %s);
+    """
+    cursor.execute(insert_query, (person_id, blood_type, medical_history))
+    fethed_row = cursor.fetchone()
+    if not fethed_row:
+        return -1
+    new_id = int(fethed_row[0])
+
+    cursor.close()
+    return new_id   
+
+def get_person_by_username(name: str):
+    cursor = get_db_connection()
+    select_query = """
+        SELECT person_id, name, email, address, phone
+        FROM persons
+        WHERE name = %s;
+    """
+    cursor.execute(select_query, (name,))
+    fetched_row = cursor.fetchone()
+    if not fetched_row:
+        cursor.close()
+        return None
+    
+    # unpack the row into a dictionary
+    person = {
+        "person_id": fetched_row[0],
+        "name": fetched_row[1],
+        "email": fetched_row[2],
+        "address": fetched_row[3],
+        "phone": fetched_row[4]
+    }
+    cursor.close()
+    return person
+# add the join and join every table return everything in a dictionary format
+
+
+
 
 
 @app.route('/PersonalLogin',methods=['POST'])
