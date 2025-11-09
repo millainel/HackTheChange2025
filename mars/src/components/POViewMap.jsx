@@ -5,7 +5,7 @@ import { usePoliceFeed } from "../hooks/connectToMQTT";
 import Base from './Base';
 
 const POViewMap = () => {
-  const [center, setCenter] = useState();
+  const [center, setCenter] = useState({ lat: 51.0447, lng: -114.0719 });
   const [messages, setMessages] = useState([]);
 
   const { isLoaded } = useJsApiLoader({
@@ -34,7 +34,7 @@ const POViewMap = () => {
   return (
     // TODO: stylize POViewMap component
     // TODO: get marker positions from db, maybe json file?, for each, place a marker on location, if hover?, click, see more info, ID, name, time, address, 
-    <div style={{height: '100%'}}>
+    <div style={{width: '100%', height: '100vh'}}>
       {/* <h1>maps</h1> */}
 
       <div style={{height: '100%'}}>
