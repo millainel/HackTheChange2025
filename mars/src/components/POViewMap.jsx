@@ -4,7 +4,7 @@ import { usePoliceFeed } from "../hooks/connectToMQTT";
 
 import Base from './Base';
 
-const MapPage = () => {
+const POViewMap = () => {
   const [center, setCenter] = useState({ lat: 51.0447, lng: -114.0719 });
   const [messages, setMessages] = useState([JSON.stringify({"lat": 51.0447, "lng": -114.0719})]);
 
@@ -41,7 +41,7 @@ const MapPage = () => {
   // }, []);
 
   return (
-    // TODO: stylize MapPage component
+    // TODO: stylize POViewMap component
     // TODO: get marker positions from db, maybe json file?, for each, place a marker on location, if hover?, click, see more info, ID, name, time, address, 
     <div style={{height: '100%'}}>
       {/* <h1>maps</h1> */}
@@ -80,4 +80,4 @@ const MapPage = () => {
   );
 };
 
-export default MapPage;
+export default POViewMap;

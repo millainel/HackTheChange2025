@@ -14,7 +14,7 @@ const POLogin = () => {
         
         if (username && password) {
             localStorage.setItem('isLoggedIn', 'true');
-            navigate('/MapPage');
+            navigate('/POViewPage');
         } else {
             setError('Please enter username and password');
         }

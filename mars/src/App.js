@@ -4,7 +4,8 @@ import POLogin from './components/POLogin';
 import PersonalLogin from './components/PersonLogin';
 import CustomerFillable from './components/CustomerFillable';
 import HealthFillable from './components/HealthFillable';
-import MapPage from './components/MapPage';
+import POViewPage from './components/POViewPage';
+// import MapPage from './components/POViewMap';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
@@ -16,10 +17,13 @@ function App() {
         <Route path="/PersonalLogin" element={<PersonalLogin />} />
         <Route path="/CustomerFillable" element={<CustomerFillable />} />
         <Route path="/HealthFillable" element={<HealthFillable />} />
-        <Route path="/MapPage" element={<MapPage />} />
+        {/* <Route path="/MapPage" element={<MapPage />} /> */}
+        <Route path="/POViewPage" element={<POViewPage />} />
       </Routes>
     </Router>
     );
 }
+
+// TODO: change all MapPage references to POViewMap
 
 export default App;
