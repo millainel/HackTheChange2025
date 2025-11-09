@@ -468,6 +468,24 @@ def get_person_by_device():
     person.pop("password", None)
     return {"success": True, "person": person}, 200
 
+@app.route("/PersonByUsername", methods=["POST"])
+def person_by_username():
+    data = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip()
+    if not username:
+        return {"success": False, "message": "Missing username."}, 400
+
+    person_id = get_person_id_by_username(username)
+    if not person_id:
+        return {"success": False, "message": "User not found."}, 404
+
+    person = get_person_by_id(person_id)
+    if not person:
+        return {"success": False, "message": "Person not found."}, 404
+
+    person.pop("password", None)
+    return {"success": True, "person": person}, 200
+
 # ---------- Main ----------
 if __name__ == "__main__":
     # add_employee("officer1", "officer1")  # one-time helper, if needed

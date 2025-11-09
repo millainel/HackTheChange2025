@@ -5,7 +5,11 @@ import Aurora from './Aurora';
 
 const PersonalPage = () => {
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState('');
   const [customer, setCustomer] = useState(null);
+
   const [showHealth, setShowHealth] = useState(false);
   const [isEditingHealth, setIsEditingHealth] = useState(false);
   const [healthData, setHealthData] = useState({
@@ -27,72 +31,107 @@ const PersonalPage = () => {
     emergencyContactNumber: '',
   });
 
-  const customers = [
-    {
-      id: 1,
-      username: 'john',
-      fname: 'John',
-      lname: 'Doe',
-      gender: 'Male',
-      birth_date: '1990-05-15',
-      email: 'john.doe@example.com',
-      address: '123 Main St',
-      phone: '403-555-1234',
-      emergencyContactName: 'Jane Doe',
-      emergencyContactNumber: '403-555-5678',
-      healthIssue: 'Asthma',
-      bloodtype: 'A+',
-      allergies: 'Peanuts',
-    },
-    {
-      id: 2,
-      username: 'emily',
-      fname: 'Emily',
-      lname: 'Smith',
-      gender: 'Female',
-      birth_date: '1987-10-23',
-      email: 'emily.smith@example.com',
-      address: '456 Elm Ave',
-      phone: '403-555-9876',
-      emergencyContactName: 'Adam Smith',
-      emergencyContactNumber: '403-555-4321',
-      healthIssue: 'Diabetes',
-      bloodtype: 'O-',
-      allergies: 'Penicillin',
-    },
-  ];
-
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    if (!storedUser) {
+    // Read username saved after login
+    const storedRaw = localStorage.getItem('loggedInUser');
+    let stored = null;
+    try { stored = storedRaw ? JSON.parse(storedRaw) : null; } catch { stored = null; }
+
+    if (!stored?.username) {
       navigate('/login');
       return;
     }
 
-    const match = customers.find(c => c.username === storedUser.username);
-    if (match) {
-      setCustomer(match);
-      setHealthData({
-        healthIssue: match.healthIssue,
-        bloodtype: match.bloodtype,
-        allergies: match.allergies,
-      });
-      setPersonalData({
-        fname: match.fname,
-        lname: match.lname,
-        gender: match.gender,
-        birth_date: match.birth_date,
-        email: match.email,
-        address: match.address,
-        phone: match.phone,
-        emergencyContactName: match.emergencyContactName,
-        emergencyContactNumber: match.emergencyContactNumber,
-      });
-    } else {
-      alert('User not found');
-      navigate('/login');
-    }
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const res = await fetch('http://localhost:5001/PersonByUsername', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: stored.username }),
+          signal: controller.signal,
+        });
+
+        let data = {};
+        try { data = await res.json(); } catch {}
+
+        if (res.status === 200 && data?.success && data?.person) {
+          const p = data.person;
+
+          // Map DB fields → UI fields
+          const normalized = {
+            id: p.person_id,
+            username: p.username || '',
+            fname: p.fname || '',
+            lname: p.lname || '',
+            gender: p.gender || '',
+            birth_date: p.birth_date || '',
+            email: p.email || '',
+            address: p.address || '',
+            phone: p.phone || '',
+            emergencyContactName: p.emergency_contact_name || '',
+            emergencyContactNumber: p.emergency_contact_phone || '',
+            healthIssue: p.medical_note || '',
+            bloodtype: p.blood_type || '',
+            allergies: p.allergy_note || p.allergy_notes || '',
+          };
+
+          setCustomer(normalized);
+          setHealthData({
+            healthIssue: normalized.healthIssue,
+            bloodtype: normalized.bloodtype,
+            allergies: normalized.allergies,
+          });
+          setPersonalData({
+            fname: normalized.fname,
+            lname: normalized.lname,
+            gender: normalized.gender,
+            birth_date: normalized.birth_date,
+            email: normalized.email,
+            address: normalized.address,
+            phone: normalized.phone,
+            emergencyContactName: normalized.emergencyContactName,
+            emergencyContactNumber: normalized.emergencyContactNumber,
+          });
+        } else if (res.status === 404) {
+          setError(data?.message || 'User not found.');
+          navigate('/login');
+        } else {
+          setError(data?.message || `Failed to load user (HTTP ${res.status})`);
+        }
+      } catch (err) {
+        if (err?.name !== 'AbortError') {
+          setError('Network/server error while loading profile.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
   }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="customer-fillable-container">
+        <Aurora colorStops={['#3A29FF', '#FF94B4', '#FF3232']} blend={0.5} amplitude={1.0} speed={0.5} />
+        <div className="customer-fillable-box"><h3>Loading…</h3></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="customer-fillable-container">
+        <Aurora colorStops={['#3A29FF', '#FF94B4', '#FF3232']} blend={0.5} amplitude={1.0} speed={0.5} />
+        <div className="customer-fillable-box"><p className="error-message">{error}</p></div>
+      </div>
+    );
+  }
 
   if (!customer) return null;
 
@@ -105,6 +144,7 @@ const PersonalPage = () => {
     setPersonalData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Currently only updates local UI. To persist, add an UPDATE API on the backend.
   const saveHealthInfo = () => {
     setCustomer(prev => ({ ...prev, ...healthData }));
     setIsEditingHealth(false);
@@ -116,14 +156,13 @@ const PersonalPage = () => {
     alert('Personal info updated!');
   };
 
-    return (
+  return (
     <div className="customer-fillable-container">
       <Aurora colorStops={['#3A29FF', '#FF94B4', '#FF3232']} blend={0.5} amplitude={1.0} speed={0.5} />
 
       <div className="customer-fillable-box">
         <h1>{showHealth ? 'Health Information' : 'Personal Information'}</h1>
 
-        {/* Toggle button */}
         <button className="submit-button" onClick={() => setShowHealth(!showHealth)}>
           {showHealth ? 'Show Personal Info' : 'Show Health Info'}
         </button>
@@ -218,10 +257,15 @@ const PersonalPage = () => {
           )}
         </div>
 
-        <button className="submit-button" onClick={() => {
-          localStorage.removeItem('loggedInUser');
-          navigate('/login');
-        }}>Log Out</button>
+        <button
+          className="submit-button"
+          onClick={() => {
+            localStorage.removeItem('loggedInUser');
+            navigate('/login');
+          }}
+        >
+          Log Out
+        </button>
       </div>
     </div>
   );
