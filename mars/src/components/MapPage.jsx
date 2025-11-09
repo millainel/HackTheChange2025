@@ -5,8 +5,8 @@ import { usePoliceFeed } from "../hooks/connectToMQTT";
 import Base from './Base';
 
 const MapPage = () => {
-  const [center, setCenter] = useState({ lat: 51.0447, lng: -114.0719 });
-  const [messages, setMessages] = useState([JSON.stringify({"lat": 51.0447, "lng": -114.0719})]);
+  const [center, setCenter] = useState();
+  const [messages, setMessages] = useState([]);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -17,10 +17,19 @@ const MapPage = () => {
   // once map is loaded, start listening to ESP feed
   usePoliceFeed((msg) => {
     console.log("Button pressed. Data received: ", msg);
-    setMessages((prev) => [...prev, msg]);
+    const lat = Number(msg?.lat);
+    const lng = Number(msg?.lng ?? msg?.long);
+
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      setCenter({ lat, lng });
+      setMessages((prev) => [...prev, { lat, lng }]);
+    } else {
+      console.warn("Ignoring invalid coords:", msg);
+    }
   });
 
   if (!isLoaded) return <div>Loading...</div>;
+  if (!center)   return <div>Waiting for location data...</div>; // ensure no default fallback
 
   // clean up if your hook returns an unsubscribe function
   // return () => {
@@ -62,7 +71,7 @@ const MapPage = () => {
         {/* <Marker position={center} /> */}
 
         {messages.map((m, i) => {
-          const { lat, lng } = JSON.parse(m);
+          const { lat, lng } = m;
           return <Marker key={i} position={{ lat: lat, lng: lng }} />;
         })}
 
