@@ -14,6 +14,9 @@ const CustomerFillable = () => {
         phone: '',
         emergencyContactName: '',
         emergencyContactNumber: '',
+        healthIssue: '',
+        bloodtype: '',
+        allergies: '',
 
     });
     const navigate = useNavigate();
@@ -135,6 +138,45 @@ const CustomerFillable = () => {
                             name="emergencyContactNumber"
                             placeholder="Emergency Contact Number"
                             value={formData.emergencyContactNumber}
+                            onChange={handleChange}
+                            className="input-field"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="healthIssue"
+                            placeholder="Health Issue"
+                            value={formData.healthIssue}
+                            onChange={handleChange}
+                            className="input-field"
+                        />
+                    </div>
+                    
+                    <div className="form-group">
+                        <select
+                            name="bloodtype"
+                            value={formData.bloodtype}
+                            onChange={handleChange}
+                            className="input-field"
+                        >
+                            <option value="">Select Blood Type</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="allergies"
+                            placeholder="Allergies"
+                            value={formData.allergies}
                             onChange={handleChange}
                             className="input-field"
                         />

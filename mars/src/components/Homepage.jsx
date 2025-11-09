@@ -28,6 +28,9 @@ const Homepage = () => {
           <button type="button" className="travel-button" onClick={() => navigate('/PersonalLogin')}>
             Personal Login
           </button>
+          <button type="button" className="travel-button" onClick={() => navigate('/PersonalSignup')}>
+            Personal Signup
+          </button>
       </div>
     </div>
   );

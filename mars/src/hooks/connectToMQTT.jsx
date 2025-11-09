@@ -16,7 +16,7 @@ export function usePoliceFeed(onMsg) {
       console.log("Connected to MQTT broker");
       client.subscribe(MQTT_TOPIC, (err) => {
         if (err) console.error(" Subscribe error:", err);
-        else console.log("📡 Subscribed to topic:", MQTT_TOPIC);
+        else console.log(" Subscribed to topic:", MQTT_TOPIC);
       });
     });
 
@@ -24,7 +24,7 @@ export function usePoliceFeed(onMsg) {
     client.on("message", (_, payload) => {
       try {
         const data = JSON.parse(payload.toString());
-        console.log("📩 Message received:", data);
+        console.log(" Message received:", data);
         onMsg(data);
       } catch (err) {
         console.error("Failed to parse MQTT message:", err);
