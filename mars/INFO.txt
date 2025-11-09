@@ -1,0 +1,42 @@
+Frontend --------------------------------
+
+install:
+-Node, NPM
+https://nodejs.org/en/download
+
+dependencies:
+-cd to .../mars
+-npm install react-router-dom
+-npm install mqtt
+-npm install @react-google-maps/api
+
+API:
+-login to sabrinal10247@gmail.com
+-use mars2025 project
+
+-TODO: restrict api key to browser and component
+
+
+
+instructions for running:
+-cd to .../mars
+-npm start
+
+resources:
+https://www.youtube.com/watch?v=iP3DnhCUIsE&t=162s (google maps API)
+
+Backend ---------------------------------
+
+
+DB ------------------------------------
+
+install:
+-PostgreSQL
+https://www.postgresql.org/download/windows/
+
+creds:
+postgres
+S********
+
+mars
+m******
