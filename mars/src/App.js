@@ -3,6 +3,7 @@ import Homepage from './components/Homepage';
 import POLogin from './components/POLogin';
 import PersonalLogin from './components/PersonLogin';
 import CustomerFillable from './components/CustomerFillable';
+import MapPage from './components/MapPage';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Route path="/POLogin" element={<POLogin />} />
         <Route path="/PersonalLogin" element={<PersonalLogin />} />
         <Route path="/CustomerFillable" element={<CustomerFillable />} />
+        <Route path="/MapPage" element={<MapPage />} />
       </Routes>
     </Router>
     );
