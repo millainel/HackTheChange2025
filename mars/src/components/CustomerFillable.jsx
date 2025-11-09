@@ -7,9 +7,13 @@ const CustomerFillable = () => {
     const [formData, setFormData] = useState({
         fname: '',
         lname: '',
+        gender: '',
         email: '',
         address: '',
         phone: '',
+        emergencyContactName: '',
+        emergencyContactNumber: '',
+
     });
     const navigate = useNavigate();
     const [error, setError] = useState('');
@@ -22,7 +26,7 @@ const CustomerFillable = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (formData.fname && formData.lname && formData.email && formData.address && formData.phone) {
+        if (formData.fname && formData.lname && formData.email && formData.address && formData.phone && formData.gender && formData.emergencyContactName && formData.emergencyContactNumber) {
             navigate('/CustomerFillable');
         } else {
             setError('Please fill in all fields');
@@ -61,6 +65,20 @@ const CustomerFillable = () => {
                         />
                     </div>
                     <div className="form-group">
+                        <select
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleChange}
+                            className="input-field"
+                        >
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                            <option value="Rather Not Say">Rather Not Say</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
                         <input
                             type="email"
                             name="email"
@@ -86,6 +104,26 @@ const CustomerFillable = () => {
                             name="phone"
                             placeholder="Phone"
                             value={formData.phone}
+                            onChange={handleChange}
+                            className="input-field"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="emergencyContactName"
+                            placeholder="Emergency Contact Name"
+                            value={formData.emergencyContactName}
+                            onChange={handleChange}
+                            className="input-field"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="emergencyContactNumber"
+                            placeholder="Emergency Contact Number"
+                            value={formData.emergencyContactNumber}
                             onChange={handleChange}
                             className="input-field"
                         />
