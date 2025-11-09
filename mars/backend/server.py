@@ -185,7 +185,7 @@ def get_person_by_id(person_id: str):
 
 
 @app.route('/PersonalLogin',methods=['POST'])
-def login():
+def Personlogin():
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
@@ -205,7 +205,7 @@ def login():
         return {"success": False, "message": "Incorrect password."}, 401
  
 @app.route('/POLogin',methods=['POST'])
-def login():
+def POlogin():
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
@@ -267,3 +267,7 @@ def signup():
 
     except Exception as e:
         return {"success": False, "message": str(e)}, 500
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
