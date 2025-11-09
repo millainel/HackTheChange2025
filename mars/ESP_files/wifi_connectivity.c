@@ -12,6 +12,8 @@
 
 #define BTN_PRESSED 0
 
+int btn_pressed = 0;
+
 // ---------- Wi-Fi ----------
 const char* WIFI_SSID = "bananawifi";
 const char* WIFI_PASS = "wifibox!";
@@ -54,6 +56,9 @@ void setup() {
   
     Serial.begin(GNSS_BAUD);
     GNSS_Serial.begin(GNSS_BAUD, SERIAL_8N1, Rx_GNSS_PIN, Tx_GNSS_PIN);
+
+    attachInterrupt(BTN_PIN, isr, FALLING); // interrupt when go from 1 to 0 
+
     delay(100);
 
   // Wi-Fi
@@ -95,7 +100,7 @@ void loop() {
 
   }
   if (gps.location.isUpdated()) {
-    digitalWrite(LED_PIN, HIGH);
+    //digitalWrite(LED_PIN, HIGH);
 
     latest_lat = gps.location.lat();
     latest_long = gps.location.lng();
@@ -116,7 +121,8 @@ void loop() {
 
 
   }
-  if(btn_state == BTN_PRESSED) {
+  if(btn_pressed == 1) {
+    digitalWrite(LED_PIN, HIGH);
     char payload[256];
     snprintf(payload, sizeof(payload),
         "{\"lat\":%.6f,\"lng\":%.6f,\"alt\":%.2f,\"sats\":%u}",
@@ -124,9 +130,15 @@ void loop() {
 
       bool ok = mqtt.publish(MQTT_TOPIC, payload);
       Serial.println(ok ? String("Published: ") + payload : "Publish failed");
+      
+      btn_pressed = 0;
   }
   
   // change this to only a button press keep it loop for now because of testing
   
   }
 
+
+void IRAM_ATTR isr() {
+  btn_pressed = 1;
+}
