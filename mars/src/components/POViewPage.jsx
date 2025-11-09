@@ -4,7 +4,10 @@ import POViewMap from './POViewMap';
 
 const POViewPage = () => {
     return (
-        <div>
+        <div style={{
+            display: 'flex',
+            // flexDirection: ''
+        }}>
             <POViewSidebar />
             <POViewMap />
         </div>
