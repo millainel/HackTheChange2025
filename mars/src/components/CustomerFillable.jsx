@@ -11,6 +11,7 @@ const CustomerFillable = () => {
         phone: '',
     });
     const navigate = useNavigate();
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -19,8 +20,12 @@ const CustomerFillable = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Handle form submission
-        console.log(formData);
+
+        if (formData.name && formData.email && formData.address && formData.phone) {
+            navigate('/CustomerFillable');
+        } else {
+            setError('Please fill in all fields');
+        }
     };
 
     return (
@@ -74,8 +79,9 @@ const CustomerFillable = () => {
                             className="input-field"
                         />
                     </div>
-                    <button type="submit" className="submit-button">
-                        Submit
+                    {error && <p className="error-message">{error}</p>}
+                    <button type="button" className="submit-button" onClick={() => navigate('/HealthFillable')}>
+                        To Health Information
                     </button>
                 </form>
             </div>
