@@ -23,14 +23,9 @@
     overflow: hidden;
 }
 
-.login-box h1 {
-    text-align: center;
-    color: #b2b2b2;
-    margin-bottom: 2rem;
-}
 .login-box h2 {
     text-align: center;
-    color: #909090;
+    color: #b2b2b2;
     margin-bottom: 2rem;
 }
 

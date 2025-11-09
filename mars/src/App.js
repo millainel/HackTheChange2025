@@ -1,29 +1,19 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import TestFeed from "./components/TestFeed";
-<<<<<<< Updated upstream
-import Login from "./components/Login";
-import MapPage from "./components/MapPage";
-=======
-import Login from "./components/POLogin";
->>>>>>> Stashed changes
+import React from 'react';
+import Homepage from './components/Homepage';
+import POLogin from './components/POLogin';
+import PersonalLogin from './components/PersonLogin';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
-  const isAuthenticated = localStorage.getItem('isLoggedIn') === 'false';
-
   return (
     <Router>
       <Routes>
-        <Route 
-          path="/" 
-          element={isAuthenticated ? <Navigate to="/Homepage" /> : <Login />} 
-        />
-        <Route 
-          path="/homepage" 
-          element={isAuthenticated ? <TestFeed /> : <Navigate to="/" />} 
-        />
+        <Route path="/" element={<Homepage />} />
+        <Route path="/POLogin" element={<POLogin />} />
+        <Route path="/PersonalLogin" element={<PersonalLogin />} />
       </Routes>
     </Router>
-  );
+    );
 }
 
 export default App;

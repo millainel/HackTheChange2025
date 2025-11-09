@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './POLogin.css';
 import Aurora from './Aurora';
 
-const Login = () => {
+const POLogin = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -29,7 +29,7 @@ const Login = () => {
                 speed={0.5}
             />
             <div className="login-box">
-                <h2>Welcome to MARS</h2>
+                <h2>Welcome to MARS, Officer</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <input
@@ -59,4 +59,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default POLogin;
