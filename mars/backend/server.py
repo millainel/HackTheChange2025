@@ -186,6 +186,40 @@ def get_person_by_id(person_id: str):
     cursor.close()
     return person
 
+def get_person_by_dev_id(device_id: str):
+    cursor = get_db_connection()
+    select_query = """
+        SELECT *
+        FROM person p
+        WHERE p.device_id = %s;
+    """
+    cursor.execute(select_query, (device_id,))
+    fetched_row = cursor.fetchone()
+    if not fetched_row:
+        cursor.close()
+        return None
+    
+ 
+    person = {
+        "person_id": fetched_row[0],
+        "fname": fetched_row[1],
+        "lname": fetched_row[2],
+        "gender": fetched_row[3],
+        "birth_date": fetched_row[4],
+        "email": fetched_row[5],
+        "address": fetched_row[6],
+        "phone": fetched_row[7],
+        "username": fetched_row[8],
+        "password": fetched_row[9],
+        "emergency_contact_name": fetched_row[10],
+        "emergency_contact_phone": fetched_row[11],
+        "blood_type": fetched_row[12],
+        "medical_note": fetched_row[13],
+        "allergy_note": fetched_row[14],
+        "device_id": fetched_row[15]
+    }
+    cursor.close()
+    return person
 
 @app.route('/PersonalLogin',methods=['POST'])
 def Personlogin():
@@ -291,17 +325,33 @@ def signup():
 
 
 @app.route('/POViewPage', methods=['POST'])
-def get_person_by_username_route():
+# def get_person_by_username():
+#     data = request.get_json()
+#     username = data.get("username")
+#     if not username:
+#         return {"success": False, "message": "Missing username."}, 400
+
+#     person_id = get_person_id_by_username(username)
+#     if not person_id:
+#         return {"success": False, "message": "User not found."}, 404
+
+#     person = get_person_by_id(person_id)
+#     if not person:
+#         return {"success": False, "message": "Person not found."}, 404
+
+#     # REMOVE THEIR PASSWORD
+#     person.pop("password", None)
+
+#     return {"success": True, "person": person}, 200
+
+def get_person_by_device():
     data = request.get_json()
-    username = data.get("username")
-    if not username:
-        return {"success": False, "message": "Missing username."}, 400
+    device_id = data.get("device_id")
+    if not device_id:
+        return {"success": False, "message": "Missing device id."}, 400
 
-    person_id = get_person_id_by_username(username)
-    if not person_id:
-        return {"success": False, "message": "User not found."}, 404
+    person = get_person_by_dev_id(device_id)
 
-    person = get_person_by_id(person_id)
     if not person:
         return {"success": False, "message": "Person not found."}, 404
 
