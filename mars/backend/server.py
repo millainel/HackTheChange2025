@@ -37,7 +37,7 @@ def check_password(plain_password: str, hashed_password: str) -> bool:
     
 def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format 'YYYY-MM-DD'
     email: str, address: str, phone: str, username: str, password: str, emergency_contact_name: str,
-    emergency_contact_phone: str, blood_type:str, medical_note: str, allergy_note: str) -> int:
+    emergency_contact_phone: str, blood_type:str, medical_note: str, allergy_note: str, device_id: str) -> int:
 
     cursor = get_db_connection()
     insert_query = """
@@ -55,9 +55,10 @@ def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format '
             emergency_contact_phone,
             blood_type,
             medical_note,
-            allergy_note
+            allergy_note,
+            device_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING person_id;
     """
     cursor.execute(
@@ -76,7 +77,8 @@ def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format '
             emergency_contact_phone,
             blood_type,
             medical_note,
-            allergy_note
+            allergy_note,
+            device_id
         )
     )
     fetched_row = cursor.fetchone()
@@ -178,7 +180,8 @@ def get_person_by_id(person_id: str):
         "emergency_contact_phone": fetched_row[11],
         "blood_type": fetched_row[12],
         "medical_note": fetched_row[13],
-        "allergy_note": fetched_row[14]
+        "allergy_note": fetched_row[14],
+        "device_id": fetched_row[15]
     }
     cursor.close()
     return person
@@ -242,11 +245,29 @@ def signup():
     blood_type = data.get("blood_type")
     medical_note = data.get("medical_note")
     allergy_note = data.get("allergy_note")
+    device_id = data.get("device_id")
 
     # make sure they filled stuff out
-    required_fields = [fname, lname, gender, address, username, password, blood_type]
+    required_fields = [fname, lname, gender, address, username, password, blood_type, device_id]
     if any(field is None for field in required_fields):
         return {"success": False, "message": "Missing required fields."}, 400
+    
+    #check username taken
+    pw = get_person_pw_by_username(username)
+    if pw != -1:
+        return {"success": False, "message": "Username already taken."}, 400
+    
+    #check password
+    if len(password) < 8:
+        return {"success": False, "message": "Error: Password must be at least 8 characters long."}, 400
+    if not any(char.isdigit() for char in password):
+        return {"success": False, "message": "Error: Password needs a digit."}, 400
+    if not any(char.isupper() for char in password):
+        return {"success": False, "message": "Error: Password needs an upper case."}, 400
+    if not any(char.islower() for char in password):
+        return {"success": False, "message": "Error: Password needs a lower case."}, 400
+    if not any(char in "!@#$%^&*()-_=+[];:,<.>/?|`~" for char in password):
+        return {"success": False, "message": "Error: Password needs a special character. (!@#$%^&*()-_=+[];:,<.>/?|`~)"}, 400
 
 
     hashed_pw = hash_password(password)
@@ -256,7 +277,7 @@ def signup():
         new_person_id = add_person(
             fname, lname, gender, birth_date, email, address, phone,
             username, hashed_pw, emergency_contact_name, emergency_contact_phone,
-            blood_type, medical_note, allergy_note
+            blood_type, medical_note, allergy_note, device_id
         )
 
         if new_person_id == -1:
