@@ -6,6 +6,8 @@ import random
 import json
 import re
 
+import bcrypt
+
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
@@ -23,67 +25,207 @@ def get_db_connection():
     )
     return conn.cursor()
 
-def add_person(name: str, email: str, address: str, phone: str) -> int:
+def hash_password(plain_password: str) -> str:
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(plain_password.encode('utf-8'), salt)
+    return hashed.decode('utf-8') 
+
+def check_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+
+def add_medical_record(person_id: int, blood_type:str, medical_note: str) -> int:
     cursor = get_db_connection()
     insert_query = """
-        INSERT INTO persons (name, email, address, phone)
-        VALUES (%s, %s, %s, %s), RETURNING person_id;
+        INSERT INTO medical_history (person_id, blood_type, medical_note)
+        VALUES (%s, %s, %s)
+        RETURNING note_id;
     """
-    cursor.execute(insert_query, (name, email, address, phone))
+    cursor.execute(insert_query, (person_id, blood_type, medical_note))
     fetched_row = cursor.fetchone()
     if not fetched_row:
         return -1
-    
-    # else get the first element of the fetched row
     new_id = int(fetched_row[0])
-    cursor.close()
-    return new_id
-
-
-
-
-def add_medical_record(person_id: int, blood_type:str, medical_history: str) -> bool:
-    cursor = get_db_connection()
-    insert_query = """
-        INSERT INTO medical_records (person_id, blood_type, medical_history)
-        VALUES (%s, %s, %s);
-    """
-    cursor.execute(insert_query, (person_id, blood_type, medical_history))
-    fethed_row = cursor.fetchone()
-    if not fethed_row:
-        return -1
-    new_id = int(fethed_row[0])
 
     cursor.close()
     return new_id   
 
-def get_person_by_username(name: str):
+def add_allergies(person_id: str, allergy_note: str) -> int:
+    cursor = get_db_connection()
+    insert_query = """
+        INSERT INTO allergies (person_id, allergy_note)
+        VALUES (%s, %s)
+        RETURNING allergy_id;
+    """
+    cursor.execute(insert_query, (person_id, allergy_note))
+    fetched_row = cursor.fetchone()
+    if not fetched_row:
+        return -1
+    new_id = int(fetched_row[0])
+
+    cursor.close()
+    return new_id 
+    
+def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format 'YYYY-MM-DD'
+    email: str, address: str, phone: str, username: str, password: str, emergency_contact_name: str,
+    emergency_contact_phone: str) -> int:
+
+    cursor = get_db_connection()
+    insert_query = """
+        INSERT INTO person (
+            fname,
+            lname,
+            gender,
+            birth_date,
+            email,
+            address,
+            phone,
+            username,
+            password,
+            emergency_contact_name,
+            emergency_contact_phone
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING person_id;
+    """
+    cursor.execute(
+        insert_query,
+        (
+            fname,
+            lname,
+            gender,
+            birth_date,
+            email,
+            address,
+            phone,
+            username,
+            password,
+            emergency_contact_name,
+            emergency_contact_phone
+        )
+    )
+    fetched_row = cursor.fetchone()
+    cursor.close()
+
+    if not fetched_row:
+        return -1
+
+    return int(fetched_row[0])   
+
+def get_person_id_by_username(username: str):
     cursor = get_db_connection()
     select_query = """
-        SELECT person_id, name, email, address, phone
-        FROM persons
-        WHERE name = %s;
-    """
-    cursor.execute(select_query, (name,))
+        SELECT p.person_id
+        FROM person p
+        WHERE p.username = %s;
+"""
+    cursor.execute(select_query, (username,))
     fetched_row = cursor.fetchone()
     if not fetched_row:
         cursor.close()
         return None
     
-    # unpack the row into a dictionary
+    return int(fetched_row[0])
+
+def get_person_pw_by_username(username: str) -> str:
+    cursor = get_db_connection()
+    select_query = """
+        SELECT p.password
+        FROM person p
+        WHERE p.username = %s;
+"""
+    cursor.execute(select_query, (username,))
+    fetched_row = cursor.fetchone()
+    if not fetched_row:
+        cursor.close()
+        return None
+    
+    return str(fetched_row[0])
+
+def get_employee_pw_by_usr(username: str):
+    cursor = get_db_connection()
+    select_query = """
+        SELECT e.password
+        FROM employee e
+        WHERE e.username = %s;
+"""
+    cursor.execute(select_query, (username,))
+    fetched_row = cursor.fetchone()
+    if not fetched_row:
+        cursor.close()
+        return None
+    
+    return str(fetched_row[0])
+
+def add_employee(username: str, password: str) -> int:
+    cursor = get_db_connection()
+    insert_query = """
+        INSERT INTO employee (username, password)
+        VALUES (%s, %s)
+        RETURNING employee_id;
+    """
+    cursor.execute(insert_query, (username, hash_password(password)))
+    fetched_row = cursor.fetchone()
+    if not fetched_row:
+        return -1
+    new_id = int(fetched_row[0])
+
+    cursor.close()
+    return new_id  
+
+
+def get_person_by_id(person_id: str):
+    cursor = get_db_connection()
+    select_query = """
+        SELECT
+            p.person_id,
+            p.fname,
+            p.lname,
+            p.gender,
+            p.birth_date,
+            p.email,
+            p.address,
+            p.phone,
+            p.username,
+            p.password,
+            p.emergency_contact_name,
+            p.emergency_contact_phone,
+            m.blood_type,
+            m.medical_note,
+            a.allergy_notes
+        FROM person p
+        LEFT JOIN medical_history m ON p.person_id = m.person_id
+        LEFT JOIN allergies a ON p.person_id = a.person_id
+        WHERE p.person_id = %s;
+    """
+    cursor.execute(select_query, (person_id,))
+    fetched_row = cursor.fetchone()
+    if not fetched_row:
+        cursor.close()
+        return None
+    
+    medical_history = {
+        "blood_type": fetched_row[12],
+        "medical_note": fetched_row[13],
+    }
     person = {
         "person_id": fetched_row[0],
-        "name": fetched_row[1],
-        "email": fetched_row[2],
-        "address": fetched_row[3],
-        "phone": fetched_row[4]
+        "fname": fetched_row[1],
+        "lname": fetched_row[2],
+        "gender": fetched_row[3],
+        "birth_date": fetched_row[4],
+        "email": fetched_row[5],
+        "address": fetched_row[6],
+        "phone": fetched_row[7],
+        "username": fetched_row[8],
+        "password": fetched_row[9],
+        "emergency_contact_name": fetched_row[10],
+        "emergency_contact_phone": fetched_row[11],
+        "medical_history": medical_history,
+        "allergies": fetched_row[14]
     }
     cursor.close()
     return person
-# add the join and join every table return everything in a dictionary format
-
-
-
 
 
 @app.route('/PersonalLogin',methods=['POST'])
