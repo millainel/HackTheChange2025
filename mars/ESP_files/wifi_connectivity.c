@@ -13,7 +13,7 @@
 #define BTN_PRESSED 0
 
 int btn_pressed = 0;
-
+#define UNIQUE_SERIAL_ID 1684
 // ---------- Wi-Fi ----------
 const char* WIFI_SSID = "bananawifi";
 const char* WIFI_PASS = "wifibox!";
@@ -127,8 +127,8 @@ void loop() {
     digitalWrite(LED_PIN, HIGH);
     char payload[256];
     snprintf(payload, sizeof(payload),
-        "{\"lat\":%.6f,\"lng\":%.6f,\"alt\":%.2f,\"sats\":%u}",
-        latest_lat, latest_long, latest_alt, satellites);
+        "{\"lat\":%.6f,\"lng\":%.6f,\"alt\":%.2f,\"sats\":%u,\"id\":%d}",
+        latest_lat, latest_long, latest_alt, satellites), UNIQUE_SERIAL_ID;
 
       bool ok = mqtt.publish(MQTT_TOPIC, payload);
       Serial.println(ok ? String("Published: ") + payload : "Publish failed");
