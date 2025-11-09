@@ -88,7 +88,7 @@ const POViewPage = () => {
             </div>
             <div className="sidebar">
                 <POViewSidebar
-                    dID={message.dID}
+                    dData={dData}
                 />
             </div>
         </div>
