@@ -13,8 +13,8 @@ const POLogin = () => {
         e.preventDefault();
         
         if (username && password) {
-            localStorage.setItem('isLoggedIn', 'false');
-            navigate('/Mappage');
+            localStorage.setItem('isLoggedIn', 'true');
+            navigate('/MapPage');
         } else {
             setError('Please enter username and password');
         }

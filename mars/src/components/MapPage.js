@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {useJsApiLoader, GoogleMap } from '@react-google-maps/api'
+import { useJsApiLoader, GoogleMap } from '@react-google-maps/api'
 import Base from './Base';
 
 const MapPage = () => {
