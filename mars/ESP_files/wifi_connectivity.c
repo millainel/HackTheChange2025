@@ -10,8 +10,6 @@
 #define Tx_GNSS_PIN 22
 #define GNSS_BAUD 9600
 
-#define UNIQUE_SERIAL_ID 1684
-
 #define BTN_PRESSED 0
 
 int btn_pressed = 0;
@@ -51,7 +49,9 @@ void ensureMqtt() {
     }
   }
 }
-
+void IRAM_ATTR isr() {
+  btn_pressed = 1;
+}
 void setup() {
     pinMode(LED_PIN, OUTPUT);
     pinMode(BTN_PIN, INPUT_PULLUP); 
@@ -127,8 +127,8 @@ void loop() {
     digitalWrite(LED_PIN, HIGH);
     char payload[256];
     snprintf(payload, sizeof(payload),
-        "{\"lat\":%.6f,\"lng\":%.6f,\"alt\":%.2f,\"sats\":%u,\"id\":%d}",
-        latest_lat, latest_long, latest_alt, satellites), UNIQUE_SERIAL_ID;
+        "{\"lat\":%.6f,\"lng\":%.6f,\"alt\":%.2f,\"sats\":%u}",
+        latest_lat, latest_long, latest_alt, satellites);
 
       bool ok = mqtt.publish(MQTT_TOPIC, payload);
       Serial.println(ok ? String("Published: ") + payload : "Publish failed");
@@ -141,6 +141,3 @@ void loop() {
   }
 
 
-void IRAM_ATTR isr() {
-  btn_pressed = 1;
-}
