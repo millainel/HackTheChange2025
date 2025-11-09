@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, createContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PersonLogin.css';
+import AuthMessage from './AuthMessage';
 import Aurora from './Aurora';
 import CustomerFillable from './CustomerFillable';
+
+export const CredentialsContext = createContext();
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -10,15 +13,18 @@ const Login = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    const [loginPressed, setLoginPressed] = useState(0);
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        
-        if (username && password) {
-            localStorage.setItem('isLoggedIn', 'true');
-            navigate('/CustomerFillable');
-        } else {
-            setError('Please enter username and password');
-        }
+
+        setLoginPressed((old) => old + 1);
+        // if (username && password) {
+        //     //localStorage.setItem('isLoggedIn', 'true');
+        //     //navigate('/CustomerFillable');
+        // } else {
+        //     setError('Please enter username and password');
+        // }
     };
 
     return (
@@ -53,10 +59,17 @@ const Login = () => {
                     </div>
                     {error && <p className="error-message">{error}</p>}
                     <button type="submit" className="login-button">
-                        Log In
+                        Log In 
                     </button>
                 </form>
             </div>
+            <div>
+                <h1> HIIIIIIIIIIIIIIIII</h1>
+                <CredentialsContext.Provider value={{ username, password, loginPressed }}>
+					<AuthMessage />
+				</CredentialsContext.Provider>
+            </div>
+
         </div>
     );
 };

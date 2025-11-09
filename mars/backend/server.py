@@ -269,5 +269,27 @@ def signup():
         return {"success": False, "message": str(e)}, 500
 
 
+@app.route('/POViewPage', methods=['POST'])
+def get_person_by_username_route():
+    data = request.get_json()
+    username = data.get("username")
+    if not username:
+        return {"success": False, "message": "Missing username."}, 400
+
+    person_id = get_person_id_by_username(username)
+    if not person_id:
+        return {"success": False, "message": "User not found."}, 404
+
+    person = get_person_by_id(person_id)
+    if not person:
+        return {"success": False, "message": "Person not found."}, 404
+
+    # REMOVE THEIR PASSWORD
+    person.pop("password", None)
+
+    return {"success": True, "person": person}, 200
+
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
