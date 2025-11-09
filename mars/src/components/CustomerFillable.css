@@ -33,6 +33,17 @@
     color: #909090;
     margin-bottom: 2rem;
 }
+.customer-fillable-box h3 {
+    text-align: center;
+    color: #dbdbdb;
+    margin-bottom: 2rem;
+    font-size: 40px;
+}
+.customer-fillable-box p {
+    text-align: center;
+    color: #909090;
+    margin-bottom: 2rem;
+}
 
 .form-group {
     margin-bottom: 1.5rem;
