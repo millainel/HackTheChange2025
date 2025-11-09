@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './CustomerFillable.css';
 import { useNavigate } from 'react-router-dom';
 import Aurora from './Aurora';
@@ -7,10 +7,12 @@ const PersonalPage = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState('');
   const [customer, setCustomer] = useState(null);
 
   const [showHealth, setShowHealth] = useState(false);
+
   const [isEditingHealth, setIsEditingHealth] = useState(false);
   const [healthData, setHealthData] = useState({
     healthIssue: '',
@@ -31,13 +33,38 @@ const PersonalPage = () => {
     emergencyContactNumber: '',
   });
 
-  useEffect(() => {
-    // Read username saved after login
-    const storedRaw = localStorage.getItem('loggedInUser');
-    let stored = null;
-    try { stored = storedRaw ? JSON.parse(storedRaw) : null; } catch { stored = null; }
+  // Grab the username once
+  const storedUsername = useMemo(() => {
+    try {
+      const storedRaw = localStorage.getItem('loggedInUser');
+      const parsed = storedRaw ? JSON.parse(storedRaw) : null;
+      return parsed?.username || null;
+    } catch {
+      return null;
+    }
+  }, []);
 
-    if (!stored?.username) {
+  // Normalize backend person -> UI model
+  const normalizePerson = (p) => ({
+    id: p.person_id,
+    username: p.username || '',
+    fname: p.fname || '',
+    lname: p.lname || '',
+    gender: p.gender || '',
+    birth_date: p.birth_date || '',
+    email: p.email || '',
+    address: p.address || '',
+    phone: p.phone || '',
+    emergencyContactName: p.emergency_contact_name || '',
+    emergencyContactNumber: p.emergency_contact_phone || '',
+    healthIssue: p.medical_note || '',
+    bloodtype: p.blood_type || '',
+    allergies: p.allergy_note || p.allergy_notes || '',
+  });
+
+  // Load profile on mount
+  useEffect(() => {
+    if (!storedUsername) {
       navigate('/login');
       return;
     }
@@ -52,7 +79,7 @@ const PersonalPage = () => {
         const res = await fetch('http://localhost:5001/PersonByUsername', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: stored.username }),
+          body: JSON.stringify({ username: storedUsername }),
           signal: controller.signal,
         });
 
@@ -60,26 +87,7 @@ const PersonalPage = () => {
         try { data = await res.json(); } catch {}
 
         if (res.status === 200 && data?.success && data?.person) {
-          const p = data.person;
-
-          // Map DB fields → UI fields
-          const normalized = {
-            id: p.person_id,
-            username: p.username || '',
-            fname: p.fname || '',
-            lname: p.lname || '',
-            gender: p.gender || '',
-            birth_date: p.birth_date || '',
-            email: p.email || '',
-            address: p.address || '',
-            phone: p.phone || '',
-            emergencyContactName: p.emergency_contact_name || '',
-            emergencyContactNumber: p.emergency_contact_phone || '',
-            healthIssue: p.medical_note || '',
-            bloodtype: p.blood_type || '',
-            allergies: p.allergy_note || p.allergy_notes || '',
-          };
-
+          const normalized = normalizePerson(data.person);
           setCustomer(normalized);
           setHealthData({
             healthIssue: normalized.healthIssue,
@@ -113,7 +121,7 @@ const PersonalPage = () => {
     })();
 
     return () => controller.abort();
-  }, [navigate]);
+  }, [navigate, storedUsername]);
 
   if (loading) {
     return (
@@ -144,16 +152,85 @@ const PersonalPage = () => {
     setPersonalData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Currently only updates local UI. To persist, add an UPDATE API on the backend.
-  const saveHealthInfo = () => {
-    setCustomer(prev => ({ ...prev, ...healthData }));
-    setIsEditingHealth(false);
-    alert('Health info updated!');
+  // ------- Save (persist to DB) -------
+  const savePersonalInfo = async () => {
+    if (!storedUsername) {
+      alert('Session expired. Please log in again.');
+      navigate('/login');
+      return;
+    }
+    try {
+      setSaving(true);
+      const res = await fetch('http://localhost:5001/PersonUpdate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: storedUsername,
+          fields: {
+            fname: personalData.fname,
+            lname: personalData.lname,
+            gender: personalData.gender,
+            birth_date: personalData.birth_date,
+            email: personalData.email,
+            address: personalData.address,
+            phone: personalData.phone,
+            emergency_contact_name: personalData.emergencyContactName,
+            emergency_contact_phone: personalData.emergencyContactNumber,
+          },
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 200 && data?.success && data?.person) {
+        const normalized = normalizePerson(data.person);
+        setCustomer(normalized);
+        setIsEditingPersonal(false);
+        alert('Personal info updated!');
+      } else {
+        alert(data?.message || `Update failed (HTTP ${res.status})`);
+      }
+    } catch {
+      alert('Network/server error while updating.');
+    } finally {
+      setSaving(false);
+    }
   };
-  const savePersonalInfo = () => {
-    setCustomer(prev => ({ ...prev, ...personalData }));
-    setIsEditingPersonal(false);
-    alert('Personal info updated!');
+
+  const saveHealthInfo = async () => {
+    if (!storedUsername) {
+      alert('Session expired. Please log in again.');
+      navigate('/login');
+      return;
+    }
+    try {
+      setSaving(true);
+      const res = await fetch('http://localhost:5001/PersonUpdate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: storedUsername,
+          fields: {
+            medical_note: healthData.healthIssue,
+            blood_type: healthData.bloodtype,
+            allergy_note: healthData.allergies, // mapped to allergy_notes on backend
+          },
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 200 && data?.success && data?.person) {
+        const normalized = normalizePerson(data.person);
+        setCustomer(normalized);
+        setIsEditingHealth(false);
+        alert('Health info updated!');
+      } else {
+        alert(data?.message || `Update failed (HTTP ${res.status})`);
+      }
+    } catch {
+      alert('Network/server error while updating.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -163,7 +240,11 @@ const PersonalPage = () => {
       <div className="customer-fillable-box">
         <h1>{showHealth ? 'Health Information' : 'Personal Information'}</h1>
 
-        <button className="submit-button" onClick={() => setShowHealth(!showHealth)}>
+        <button
+          className="submit-button"
+          onClick={() => setShowHealth(!showHealth)}
+          disabled={saving}
+        >
           {showHealth ? 'Show Personal Info' : 'Show Health Info'}
         </button>
 
@@ -205,7 +286,9 @@ const PersonalPage = () => {
                   <div className="form-group">
                     <input type="text" name="emergencyContactNumber" value={personalData.emergencyContactNumber} onChange={handlePersonalChange} className="input-field" placeholder="Emergency Contact Number"/>
                   </div>
-                  <button className="submit-button" onClick={savePersonalInfo}>Save</button>
+                  <button className="submit-button" onClick={savePersonalInfo} disabled={saving}>
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
                 </div>
               ) : (
                 <div>
@@ -216,7 +299,7 @@ const PersonalPage = () => {
                   <p><strong>Address:</strong> {customer.address}</p>
                   <p><strong>Phone:</strong> {customer.phone}</p>
                   <p><strong>Emergency Contact:</strong> {customer.emergencyContactName} ({customer.emergencyContactNumber})</p>
-                  <button className="submit-button" onClick={() => setIsEditingPersonal(true)}>Edit</button>
+                  <button className="submit-button" onClick={() => setIsEditingPersonal(true)} disabled={saving}>Edit</button>
                 </div>
               )}
             </div>
@@ -243,14 +326,16 @@ const PersonalPage = () => {
                   <div className="form-group">
                     <input type="text" name="allergies" value={healthData.allergies} onChange={handleHealthChange} className="input-field" placeholder="Allergies"/>
                   </div>
-                  <button className="submit-button" onClick={saveHealthInfo}>Save</button>
+                  <button className="submit-button" onClick={saveHealthInfo} disabled={saving}>
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
                 </div>
               ) : (
                 <div>
                   <p><strong>Health Issue:</strong> {customer.healthIssue}</p>
                   <p><strong>Blood Type:</strong> {customer.bloodtype}</p>
                   <p><strong>Allergies:</strong> {customer.allergies}</p>
-                  <button className="submit-button" onClick={() => setIsEditingHealth(true)}>Edit</button>
+                  <button className="submit-button" onClick={() => setIsEditingHealth(true)} disabled={saving}>Edit</button>
                 </div>
               )}
             </div>
@@ -263,6 +348,7 @@ const PersonalPage = () => {
             localStorage.removeItem('loggedInUser');
             navigate('/login');
           }}
+          disabled={saving}
         >
           Log Out
         </button>

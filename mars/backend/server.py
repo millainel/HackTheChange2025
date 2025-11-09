@@ -486,7 +486,76 @@ def person_by_username():
     person.pop("password", None)
     return {"success": True, "person": person}, 200
 
-# ---------- Main ----------
+@app.route("/PersonUpdate", methods=["POST"])
+def person_update():
+    data = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip()
+    fields = data.get("fields") or {}
+
+    if not username:
+        return {"success": False, "message": "Missing username."}, 400
+    if not isinstance(fields, dict) or not fields:
+        return {"success": False, "message": "No fields provided to update."}, 400
+
+    key_map = {
+        "fname": "fname",
+        "lname": "lname",
+        "gender": "gender",
+        "birth_date": "birth_date",
+        "email": "email",
+        "address": "address",
+        "phone": "phone",
+        "emergency_contact_name": "emergency_contact_name",
+        "emergency_contact_phone": "emergency_contact_phone",
+        "medical_note": "medical_note",
+        "blood_type": "blood_type",
+        "allergy_note": "allergy_notes",   
+        "allergy_notes": "allergy_notes",
+    }
+
+    updates, values = [], []
+    for k, v in fields.items():
+        col = key_map.get(k)
+        if col is None:
+            continue
+        updates.append(f"{col} = %s")
+        values.append(v)
+
+    if not updates:
+        return {"success": False, "message": "No valid fields to update."}, 400
+
+    select_sql = "SELECT person_id FROM person WHERE LOWER(username) = LOWER(%s) LIMIT 1;"
+    update_sql = f"UPDATE person SET {', '.join(updates)} WHERE LOWER(username) = LOWER(%s) RETURNING person_id;"
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute(select_sql, (username,))
+            row = cur.fetchone()
+            if not row:
+                return {"success": False, "message": "User not found."}, 404
+            cur.execute(update_sql, (*values, username))
+            ret = cur.fetchone()
+        conn.commit()
+
+        person = get_person_by_id(ret[0]) if ret else None
+        if not person:
+            return {"success": False, "message": "Failed to load updated person."}, 500
+        person.pop("password", None)
+        return {"success": True, "person": person}, 200
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("person_update error:", e)
+        return {"success": False, "message": "Update failed."}, 500
+    finally:
+        if conn:
+            conn.close()
+
+
+
 if __name__ == "__main__":
     # add_employee("officer1", "officer1")  # one-time helper, if needed
     app.run(host="0.0.0.0", port=5001, debug=True)
