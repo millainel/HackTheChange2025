@@ -1,0 +1,78 @@
+.customer-fillable-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #000;
+    position: relative;
+    overflow: hidden;
+}
+
+.customer-fillable-box {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 420px;
+    padding: 3rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    overflow: hidden;
+}
+
+.customer-fillable-box h1 {
+    text-align: center;
+    color: #b2b2b2;
+    margin-bottom: 2rem;
+}
+.customer-fillable-box h2 {
+    text-align: center;
+    color: #909090;
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-field {
+    position: relative;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 15px;
+    transition: border-color 0.3s ease;
+}
+
+.input-field:focus {
+    position: relative;
+    outline: none;
+    border-color: #4a90e2;
+}
+
+.login-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: #357abd;
+}
+
+.error-message {
+    color: #e74c3c;
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 14px;
+}

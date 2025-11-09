@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PersonLogin.css';
 import Aurora from './Aurora';
+import CustomerFillable from './CustomerFillable';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -13,7 +14,7 @@ const Login = () => {
         e.preventDefault();
         
         if (username && password) {
-            localStorage.setItem('isLoggedIn', 'false');
+            localStorage.setItem('isLoggedIn', 'true');
             navigate('/CustomerFillable');
         } else {
             setError('Please enter username and password');
