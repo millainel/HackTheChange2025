@@ -55,7 +55,8 @@ const POViewMap = ({ center, message }) => {
             zoomControl: true,
             streetViewControl: true,
             mapTypeControl: true,
-            fullscreenControl: true,
+            fullscreenControl: false,
+            scrollwheel: false
         }}
         >
 
