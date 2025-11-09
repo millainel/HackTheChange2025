@@ -12,11 +12,15 @@ const MapPage = () => {
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
   })
 
+  console.log("isLoaded:", isLoaded);
+
   // once map is loaded, start listening to ESP feed
   usePoliceFeed((msg) => {
     console.log("Button pressed. Data received: ", msg);
     setMessages((prev) => [...prev, msg]);
   });
+
+  if (!isLoaded) return <div>Loading...</div>;
 
   // clean up if your hook returns an unsubscribe function
   // return () => {
@@ -35,8 +39,6 @@ const MapPage = () => {
   //   });
 
   // }, []);
-
-  console.log("isLoaded:", isLoaded);
 
   return (
     // TODO: stylize MapPage component
