@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Login.css';
+import './PersonLogin.css';
 import Aurora from './Aurora';
 
 const Login = () => {
@@ -14,7 +14,7 @@ const Login = () => {
         
         if (username && password) {
             localStorage.setItem('isLoggedIn', 'false');
-            navigate('/Mappage');
+            navigate('/CustomerFillable');
         } else {
             setError('Please enter username and password');
         }
@@ -29,7 +29,8 @@ const Login = () => {
                 speed={0.5}
             />
             <div className="login-box">
-                <h2>Welcome to MARS</h2>
+                <h1>Welcome to MARS, User</h1>
+                <h2>Please log in to continue filling your information</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <input
