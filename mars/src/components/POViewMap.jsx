@@ -4,32 +4,41 @@ import { usePoliceFeed } from "../hooks/connectToMQTT";
 
 import Base from './Base';
 
-const POViewMap = () => {
-  const [center, setCenter] = useState({ lat: 51.0447, lng: -114.0719 });
-  const [messages, setMessages] = useState([]);
+const POViewMap = ({ center, message }) => {
+  const { lat, lng, dID } = message || {};
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-  })
+  useEffect(() => {
+  if (Marker.current && lat && lng) {
+    Marker.current.panTo({ lat, lng }); // see if this works
+  }
+}, [lat, lng]);
 
-  console.log("isLoaded:", isLoaded);
 
-  // once map is loaded, start listening to ESP feed
-  usePoliceFeed((msg) => {
-    console.log("Button pressed. Data received: ", msg);
-    const lat = Number(msg?.lat);
-    const lng = Number(msg?.lng ?? msg?.long);
+  // const [center, setCenter] = useState({ lat: 51.0447, lng: -114.0719 });
+  // const [messages, setMessages] = useState([]);
 
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      setCenter({ lat, lng });
-      setMessages((prev) => [...prev, { lat, lng }]);
-    } else {
-      console.warn("Ignoring invalid coords:", msg);
-    }
-  });
+  // const { isLoaded } = useJsApiLoader({
+  //   googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+  // })
 
-  if (!isLoaded) return <div>Loading...</div>;
-  if (!center)   return <div>Waiting for location data...</div>; // ensure no default fallback
+  // console.log("isLoaded:", isLoaded);
+
+  // // once map is loaded, start listening to ESP feed
+  // usePoliceFeed((msg) => {
+  //   console.log("Button pressed. Data received: ", msg);
+  //   const lat = Number(msg?.lat);
+  //   const lng = Number(msg?.lng ?? msg?.long);
+
+  //   if (Number.isFinite(lat) && Number.isFinite(lng)) {
+  //     setCenter({ lat, lng });
+  //     setMessages((prev) => [...prev, { lat, lng }]);
+  //   } else {
+  //     console.warn("Ignoring invalid coords:", msg);
+  //   }
+  // });
+
+  // if (!isLoaded) return <div>Loading...</div>;
+  // if (!center)   return <div>Waiting for location data...</div>; // ensure no default fallback
 
   return (
     // TODO: stylize POViewMap component
@@ -39,7 +48,7 @@ const POViewMap = () => {
 
       <div style={{height: '100%'}}>
         <GoogleMap 
-          center={center} 
+          center={center}
           zoom={15} 
           mapContainerStyle={{width: '100%', height: '100%'}} 
           options={{
@@ -52,10 +61,19 @@ const POViewMap = () => {
 
         {/* <Marker position={center} /> */}
 
-        {messages.map((m, i) => {
+        {/* {messages.map((m, i) => {
           const { lat, lng } = m;
           return <Marker key={i} position={{ lat: lat, lng: lng }} />;
-        })}
+        })} */}
+
+        {/* return <Marker key={i} position={{ lat: lat, lng: lng }} />; */}
+
+          {lat && lng && (
+            <Marker
+              key={`${message.dID ?? 'default'}`}
+              position={{ lat, lng }}
+            />
+          )}
 
         </GoogleMap>
       </div>
