@@ -11,19 +11,17 @@ import bcrypt
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "your_database")
-DB_USER = os.getenv("DB_USER", "your_username")
-DB_PASS = os.getenv("DB_PASS", "your_password")
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASS = os.getenv("DB_PASS")
 
 def get_db_connection():
     conn = psycopg2.connect(
-        host=DB_HOST,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS
+         dbname="mars_db", user="postgres", password="postgres", host="localhost", port=5432
+
     )
-    return conn.cursor()
+    return conn
 
 def hash_password(plain_password: str) -> str:
     salt = bcrypt.gensalt()
@@ -33,15 +31,73 @@ def hash_password(plain_password: str) -> str:
 def check_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
+def username_exists(username: str) -> bool:
+    uname = (username or "").strip()
+    if not uname:
+        return False
 
-    
-def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format 'YYYY-MM-DD'
-    email: str, address: str, phone: str, username: str, password: str, emergency_contact_name: str,
-    emergency_contact_phone: str, blood_type:str, medical_note: str, allergy_note: str, device_id: str) -> int:
+    sql = """
+        SELECT EXISTS(
+          SELECT 1 FROM person
+          -- choose exact or case-insensitive:
+          -- WHERE username = %s
+          WHERE LOWER(username) = LOWER(%s)
+        );
+    """
+    conn = None
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute(sql, (uname,))
+            exists = cur.fetchone()[0]  # bool
+            return bool(exists)
+    except Exception as e:
+        print("username_exists error:", e)
+        # be conservative in /check_username (we returned 200 anyway).
+        # Here we can also return False to avoid blocking the user if DB hiccups.
+        return False
+    finally:
+        if conn:
+            conn.close()
 
-    cursor = get_db_connection()
-    insert_query = """
-        INSERT INTO person (
+@app.route('/check_username', methods=['POST'])
+def check_username():
+    data = request.get_json(silent=True) or {}
+    username = (data.get("username") or "").strip()
+    if not username:
+        return {"exists": False, "message": "No username provided"}, 400
+
+    exists = username_exists(username)
+    return {
+        "exists": exists,
+        "message": "Username already taken" if exists else "Username available"
+    }, 200
+
+
+import psycopg2
+
+def add_person(
+    fname: str,
+    lname: str,
+    gender: str,
+    birth_date: str,  # 'YYYY-MM-DD' or None
+    email: str,
+    address: str,
+    phone: str,
+    username: str,
+    password: str,  # raw; we will hash here
+    emergency_contact_name: str,
+    emergency_contact_phone: str,
+    blood_type: str,
+    medical_note: str,
+    allergy_note: str,   # <-- singular to match column name
+    device_id: str,
+) -> int:
+    """
+    Inserts a row into public.person and returns the new person_id, or -1 on failure.
+    """
+    sql = """
+        INSERT INTO public.person (
             fname,
             lname,
             gender,
@@ -55,39 +111,54 @@ def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format '
             emergency_contact_phone,
             blood_type,
             medical_note,
-            allergy_note,
+            allergy_notes,           -- <-- make sure this column exists in the DB
             device_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (
+            %s, %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s,
+            %s, %s, %s, %s
+        )
         RETURNING person_id;
     """
-    cursor.execute(
-        insert_query,
-        (
-            fname,
-            lname,
-            gender,
-            birth_date,
-            email,
-            address,
-            phone,
-            username,
-            hash_password(password),
-            emergency_contact_name,
-            emergency_contact_phone,
-            blood_type,
-            medical_note,
-            allergy_note,
-            device_id
-        )
-    )
-    fetched_row = cursor.fetchone()
-    cursor.close()
 
-    if not fetched_row:
+    conn = None
+    try:
+        conn = get_db_connection()            # MUST return a connection, not a cursor
+        with conn.cursor() as cur:
+            cur.execute(sql, (
+                fname,
+                lname,
+                gender,
+                birth_date,
+                email,
+                address,
+                phone,
+                username,
+                hash_password(password),       # hash here; then DO NOT hash in the route
+                emergency_contact_name,
+                emergency_contact_phone,
+                blood_type,
+                medical_note,
+                allergy_note,
+                device_id,
+            ))
+            row = cur.fetchone()
+        conn.commit()                        
+
+        if not row or row[0] is None:
+            return -1
+        return int(row[0])
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("add_person error:", e)
         return -1
 
-    return int(fetched_row[0])   
+    finally:
+        if conn:
+            conn.close()
 
 def get_person_id_by_username(username: str):
     cursor = get_db_connection()
@@ -278,7 +349,7 @@ def signup():
     emergency_contact_phone = data.get("emergency_contact_phone")
     blood_type = data.get("blood_type")
     medical_note = data.get("medical_note")
-    allergy_note = data.get("allergy_note")
+    allergy_notes = data.get("allergy_note")
     device_id = data.get("device_id")
 
     # make sure they filled stuff out
@@ -287,21 +358,21 @@ def signup():
         return {"success": False, "message": "Missing required fields."}, 400
     
     #check username taken
-    pw = get_person_pw_by_username(username)
-    if pw != -1:
-        return {"success": False, "message": "Username already taken."}, 400
+    # pw = get_person_pw_by_username(username)
+    # if pw != -1:
+    #     return {"success": False, "message": "Username already taken."}, 400
     
     #check password
-    if len(password) < 8:
-        return {"success": False, "message": "Error: Password must be at least 8 characters long."}, 400
-    if not any(char.isdigit() for char in password):
-        return {"success": False, "message": "Error: Password needs a digit."}, 400
-    if not any(char.isupper() for char in password):
-        return {"success": False, "message": "Error: Password needs an upper case."}, 400
-    if not any(char.islower() for char in password):
-        return {"success": False, "message": "Error: Password needs a lower case."}, 400
-    if not any(char in "!@#$%^&*()-_=+[];:,<.>/?|`~" for char in password):
-        return {"success": False, "message": "Error: Password needs a special character. (!@#$%^&*()-_=+[];:,<.>/?|`~)"}, 400
+    # if len(password) < 8:
+    #     return {"success": False, "message": "Error: Password must be at least 8 characters long."}, 400
+    # if not any(char.isdigit() for char in password):
+    #     return {"success": False, "message": "Error: Password needs a digit."}, 400
+    # if not any(char.isupper() for char in password):
+    #     return {"success": False, "message": "Error: Password needs an upper case."}, 400
+    # if not any(char.islower() for char in password):
+    #     return {"success": False, "message": "Error: Password needs a lower case."}, 400
+    # if not any(char in "!@#$%^&*()-_=+[];:,<.>/?|`~" for char in password):
+    #     return {"success": False, "message": "Error: Password needs a special character. (!@#$%^&*()-_=+[];:,<.>/?|`~)"}, 400
 
 
     hashed_pw = hash_password(password)
@@ -311,7 +382,7 @@ def signup():
         new_person_id = add_person(
             fname, lname, gender, birth_date, email, address, phone,
             username, hashed_pw, emergency_contact_name, emergency_contact_phone,
-            blood_type, medical_note, allergy_note, device_id
+            blood_type, medical_note, allergy_notes, device_id
         )
 
         if new_person_id == -1:
@@ -363,4 +434,4 @@ def get_person_by_device():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)

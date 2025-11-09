@@ -9,23 +9,27 @@ import POViewPage from './components/POViewPage';
 import MapPage from './components/POViewMap';
 import PersonalSignup from './components/PersonSignup';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { SignupFlowProvider } from './SignupFlowContext'; // ✅ make sure path is correct
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Homepage />} />
-        <Route path="/POLogin" element={<POLogin />} />
-        <Route path="/PersonalLogin" element={<PersonalLogin />} />
-        <Route path="/PersonalSignup" element={<PersonalSignup />} />
-        <Route path="/PersonalPage" element={<PersonalPage />} />
-        <Route path="/CustomerFillable" element={<CustomerFillable />} />
-        <Route path="/HealthFillable" element={<HealthFillable />} />
-        <Route path="/MapPage" element={<MapPage />} />
-        <Route path="/POViewPage" element={<POViewPage />} />
-      </Routes>
-    </Router>
-    );
+    <SignupFlowProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Homepage />} />
+          <Route path="/POLogin" element={<POLogin />} />
+          <Route path="/PersonalLogin" element={<PersonalLogin />} />
+          <Route path="/PersonalSignup" element={<PersonalSignup />} />
+          <Route path="/PersonalPage" element={<PersonalPage />} />
+          <Route path="/CustomerFillable" element={<CustomerFillable />} />
+          <Route path="/HealthFillable" element={<HealthFillable />} />
+          <Route path="/MapPage" element={<MapPage />} />
+          <Route path="/POViewPage" element={<POViewPage />} />
+        </Routes>
+      </Router>
+    </SignupFlowProvider>
+  );
+  
 }
 
 // TODO: change all MapPage references to POViewMap
