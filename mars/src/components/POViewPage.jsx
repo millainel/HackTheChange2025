@@ -18,7 +18,9 @@ const POViewPage = () => {
 
     // NOTE: IMPORTANT! moving viewmap collecting data to viewpage, to use as contexts and props to hand down
     const [center, setCenter] = useState({ lat: 51.0447, lng: -114.0719 });
-    const [messages, setMessages] = useState([]);
+    // const [center, setCenter] = useState(); // NOTE: remove default value of schulich, center for message for marker coords
+    // const [messages, setMessages] = useState([]);
+    const [message, setMessage] = useState({ dID: "mars123" }); // NOTE: hard coded initial value of dID
     
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -31,17 +33,20 @@ const POViewPage = () => {
         console.log("Button pressed. Data received: ", msg);
         const lat = Number(msg?.lat);
         const lng = Number(msg?.lng ?? msg?.long);
-        const dID = Number(msg?.dID);
+        const dID = Number(msg?.dID); // added dID
 
         if (Number.isFinite(lat) && Number.isFinite(lng)) {
             setCenter({ lat, lng });
-            setMessages((prev) => [...prev, { lat, lng }]);
+            // setMessages((prev) => [...prev, { lat, lng }]);
+            setMessage((prev) => ({ lat, lng, dID })); // remove array of info, override with one at a time
         } else {
             console.warn("Ignoring invalid coords:", msg);
         }
     });
     
-    if (!isLoaded) return <div>Loading...</div>;
+    console.log("message: ", message);
+
+    if (!isLoaded) return <div>Map loading...</div>;
     if (!center)   return <div>Waiting for location data...</div>; // ensure no default fallback
 
     return (
@@ -51,11 +56,14 @@ const POViewPage = () => {
             </div> */}
             <div className="map">
                 <POViewMap
-
+                    center={center}
+                    message={message}
                 />
             </div>
             <div className="sidebar">
-                <POViewSidebar />
+                <POViewSidebar
+                    dID={message.dID}
+                />
             </div>
         </div>
     );
