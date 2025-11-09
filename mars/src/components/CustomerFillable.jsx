@@ -5,7 +5,8 @@ import Aurora from './Aurora';
 
 const CustomerFillable = () => {
     const [formData, setFormData] = useState({
-        name: '',
+        fname: '',
+        lname: '',
         email: '',
         address: '',
         phone: '',
@@ -21,7 +22,7 @@ const CustomerFillable = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (formData.name && formData.email && formData.address && formData.phone) {
+        if (formData.fname && formData.lname && formData.email && formData.address && formData.phone) {
             navigate('/CustomerFillable');
         } else {
             setError('Please fill in all fields');
@@ -42,9 +43,19 @@ const CustomerFillable = () => {
                     <div className="form-group">
                         <input
                             type="text"
-                            name="name"
-                            placeholder="Name"
-                            value={formData.name}
+                            name="fname"
+                            placeholder="First Name"
+                            value={formData.fname}
+                            onChange={handleChange}
+                            className="input-field"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="lname"
+                            placeholder="Last Name"
+                            value={formData.lname}
                             onChange={handleChange}
                             className="input-field"
                         />
