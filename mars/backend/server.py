@@ -34,41 +34,10 @@ def check_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
-def add_medical_record(person_id: int, blood_type:str, medical_note: str) -> int:
-    cursor = get_db_connection()
-    insert_query = """
-        INSERT INTO medical_history (person_id, blood_type, medical_note)
-        VALUES (%s, %s, %s)
-        RETURNING note_id;
-    """
-    cursor.execute(insert_query, (person_id, blood_type, medical_note))
-    fetched_row = cursor.fetchone()
-    if not fetched_row:
-        return -1
-    new_id = int(fetched_row[0])
-
-    cursor.close()
-    return new_id   
-
-def add_allergies(person_id: str, allergy_note: str) -> int:
-    cursor = get_db_connection()
-    insert_query = """
-        INSERT INTO allergies (person_id, allergy_note)
-        VALUES (%s, %s)
-        RETURNING allergy_id;
-    """
-    cursor.execute(insert_query, (person_id, allergy_note))
-    fetched_row = cursor.fetchone()
-    if not fetched_row:
-        return -1
-    new_id = int(fetched_row[0])
-
-    cursor.close()
-    return new_id 
     
 def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format 'YYYY-MM-DD'
     email: str, address: str, phone: str, username: str, password: str, emergency_contact_name: str,
-    emergency_contact_phone: str) -> int:
+    emergency_contact_phone: str, blood_type:str, medical_note: str, allergy_note: str) -> int:
 
     cursor = get_db_connection()
     insert_query = """
@@ -83,9 +52,12 @@ def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format '
             username,
             password,
             emergency_contact_name,
-            emergency_contact_phone
+            emergency_contact_phone,
+            blood_type,
+            medical_note,
+            allergy_note
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING person_id;
     """
     cursor.execute(
@@ -101,7 +73,10 @@ def add_person(fname: str, lname: str, gender: str, birth_date: str,  # format '
             username,
             password,
             emergency_contact_name,
-            emergency_contact_phone
+            emergency_contact_phone,
+            blood_type,
+            medical_note,
+            allergy_note
         )
     )
     fetched_row = cursor.fetchone()
@@ -177,25 +152,8 @@ def add_employee(username: str, password: str) -> int:
 def get_person_by_id(person_id: str):
     cursor = get_db_connection()
     select_query = """
-        SELECT
-            p.person_id,
-            p.fname,
-            p.lname,
-            p.gender,
-            p.birth_date,
-            p.email,
-            p.address,
-            p.phone,
-            p.username,
-            p.password,
-            p.emergency_contact_name,
-            p.emergency_contact_phone,
-            m.blood_type,
-            m.medical_note,
-            a.allergy_notes
+        SELECT *
         FROM person p
-        LEFT JOIN medical_history m ON p.person_id = m.person_id
-        LEFT JOIN allergies a ON p.person_id = a.person_id
         WHERE p.person_id = %s;
     """
     cursor.execute(select_query, (person_id,))
@@ -204,10 +162,7 @@ def get_person_by_id(person_id: str):
         cursor.close()
         return None
     
-    medical_history = {
-        "blood_type": fetched_row[12],
-        "medical_note": fetched_row[13],
-    }
+ 
     person = {
         "person_id": fetched_row[0],
         "fname": fetched_row[1],
@@ -221,8 +176,9 @@ def get_person_by_id(person_id: str):
         "password": fetched_row[9],
         "emergency_contact_name": fetched_row[10],
         "emergency_contact_phone": fetched_row[11],
-        "medical_history": medical_history,
-        "allergies": fetched_row[14]
+        "blood_type": fetched_row[12],
+        "medical_note": fetched_row[13],
+        "allergy_note": fetched_row[14]
     }
     cursor.close()
     return person
